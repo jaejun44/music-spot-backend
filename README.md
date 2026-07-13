@@ -18,7 +18,7 @@
 | 인증          | JSON Web Token, bcrypt            |
 | 검증          | zod                               |
 | 보안          | helmet, cors, express-rate-limit  |
-| 테스트        | Jest + ts-jest (64개 통과)        |
+| 테스트        | Jest + ts-jest (70개 통과)        |
 | 배포          | Render (Web Service + PostgreSQL) |
 
 ## 아키텍처 — 헥사고날 (포트 & 어댑터)
@@ -96,7 +96,8 @@ model Room {
   rating       Float?
   reviewCount  Int?
   hours        String?  // "0~24시"
-  sourceUrl    String   @unique // 원본 상세 페이지. 재시드 시 중복을 막는 기준 키
+  sourceUrl    String?  @unique // 크롤링 원본 페이지. 직접 등록한 곳은 null
+  ownerId      Int?     // 등록자. 크롤링 시드는 주인이 없어(null) 아무도 못 지운다
   createdAt    DateTime @default(now())
 }
 
@@ -543,7 +544,7 @@ FROM "Post" p JOIN "User" u ON u.id = p."authorId" ORDER BY p."createdAt" DESC;
 npm test
 ```
 
-서비스·도메인·인증 미들웨어에 대한 단위 테스트 **64개**가 있습니다. DB 없이 돌아갑니다 (가짜 의존성 주입).
+서비스·도메인·인증 미들웨어에 대한 단위 테스트 **70개**가 있습니다. DB 없이 돌아갑니다 (가짜 의존성 주입).
 
 | 파일                      | 검증 내용                                                                                                      |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------- |
