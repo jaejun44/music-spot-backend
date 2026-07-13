@@ -3,9 +3,9 @@
 밴드 연습실 매칭 서비스 [Music Spot](https://www.musicspotfest.com/) 랜딩 페이지의 백엔드 API 서버입니다.
 스프린트 미션 6에서 만든 프론트엔드의 Mock 데이터를 걷어내고, 실제 PostgreSQL에 데이터를 저장하는 서버를 붙였습니다.
 
+- **배포된 랜딩 페이지**: https://music-spot-landing.vercel.app
+- **배포된 API**: https://music-spot-backend-s509.onrender.com
 - **프론트엔드 저장소**: [music-spot-landing](https://github.com/jaejun44/music-spot-landing)
-- **배포된 API**: `https://music-spot-backend-s509.onrender.com`
-- **배포된 랜딩 페이지**: (Vercel URL)
 
 ## 기술 스택
 
@@ -390,7 +390,7 @@ Render → **New** → **Web Service** → 이 저장소를 연결하고:
 | `DATABASE_URL` | 1번에서 복사한 **Internal** Database URL |
 | `JWT_SECRET` | 긴 랜덤 문자열 (`openssl rand -base64 32`) |
 | `NODE_ENV` | `production` |
-| `CORS_ORIGIN` | Vercel 랜딩 페이지 주소 (예: `https://music-spot-landing.vercel.app`) |
+| `CORS_ORIGIN` | Vercel 랜딩 페이지 주소 (예: https://music-spot-landing.vercel.app) |
 
 > `PORT`는 Render가 자동으로 주입하므로 설정하지 않습니다.
 
