@@ -3,6 +3,7 @@ import { createUserService } from "./user.service.js";
 import type { IUserRepo } from "../contracts/user-repo.contract.js";
 import type { User } from "../../generated/prisma/client.js";
 import { BusinessException } from "../../shared/exceptions/business.exception.js";
+import { catchBusinessException } from "../../shared/testing/catch-error.js";
 
 const 저장된유저: User = {
   id: 1,
@@ -44,7 +45,7 @@ describe("내 정보 조회(getMe)", () => {
       .mockResolvedValue(null);
     const { getMe } = createUserService(findUserById);
 
-    const err = await getMe(999).catch((e) => e as BusinessException);
+    const err = await catchBusinessException(() => getMe(999));
 
     expect(err).toBeInstanceOf(BusinessException);
     expect(err.message).toBe("존재하지 않는 유저입니다.");

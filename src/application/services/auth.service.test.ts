@@ -5,6 +5,7 @@ import type { IJwtUtil } from "../../shared/contracts/jwt-util.contract.js";
 import type { IHashUtil } from "../../shared/contracts/hash-util.contract.js";
 import type { User } from "../../generated/prisma/client.js";
 import { BusinessException } from "../../shared/exceptions/business.exception.js";
+import { catchBusinessException } from "../../shared/testing/catch-error.js";
 import {
   TechnicalException,
   TechnicalExceptionCode,
@@ -135,12 +136,12 @@ describe("로그인(signIn)", () => {
       가짜의존성만들기({ findUserByEmail: 저장된유저, compare: false }),
     );
 
-    const err1 = await 계정없음
-      .signIn({ email: "a@a.com", password: "1234" })
-      .catch((e) => e as BusinessException);
-    const err2 = await 비번틀림
-      .signIn({ email: "asd@asd.com", password: "1234" })
-      .catch((e) => e as BusinessException);
+    const err1 = await catchBusinessException(() =>
+      계정없음.signIn({ email: "a@a.com", password: "1234" }),
+    );
+    const err2 = await catchBusinessException(() =>
+      비번틀림.signIn({ email: "asd@asd.com", password: "1234" }),
+    );
 
     expect(err1.message).toBe(err2.message);
     expect(err1.statusCode).toBe(401);
@@ -289,11 +290,9 @@ describe("회원가입(signUp)", () => {
     const deps = 가짜의존성만들기({ findUserByEmail: 저장된유저 });
     const { signUp } = 서비스만들기(deps);
 
-    const err = await signUp({
-      email: "asd@asd.com",
-      password: "1234",
-      username: "재준",
-    }).catch((e) => e as BusinessException);
+    const err = await catchBusinessException(() =>
+      signUp({ email: "asd@asd.com", password: "1234", username: "재준" }),
+    );
 
     expect(err).toBeInstanceOf(BusinessException);
     expect(err.message).toBe("이미 가입된 이메일입니다.");
@@ -314,11 +313,9 @@ describe("회원가입(signUp)", () => {
     );
     const { signUp } = 서비스만들기(deps);
 
-    const err = await signUp({
-      email: "race@asd.com",
-      password: "1234",
-      username: "동시",
-    }).catch((e) => e as BusinessException);
+    const err = await catchBusinessException(() =>
+      signUp({ email: "race@asd.com", password: "1234", username: "동시" }),
+    );
 
     expect(err).toBeInstanceOf(BusinessException);
     expect(err.message).toBe("이미 가입된 이메일입니다.");

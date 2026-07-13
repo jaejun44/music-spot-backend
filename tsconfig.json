@@ -13,5 +13,8 @@
     "resolveJsonModule": true,
     "typeRoots": ["src/shared/express.d.ts", "node_modules/@types"]
   },
-  "include": ["src"]
+  "include": ["src"],
+  // 테스트 코드는 배포물(dist)에 들어가면 안 된다.
+  // 타입 검사는 tsconfig.typecheck.json이 별도로 수행한다.
+  "exclude": ["**/*.test.ts", "src/shared/testing"]
 }

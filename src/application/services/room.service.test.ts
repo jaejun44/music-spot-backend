@@ -3,6 +3,7 @@ import { createRoomService } from "./room.service.js";
 import type { IRoomRepo } from "../contracts/room-repo.contract.js";
 import type { Room } from "../../generated/prisma/client.js";
 import { BusinessException } from "../../shared/exceptions/business.exception.js";
+import { catchBusinessException } from "../../shared/testing/catch-error.js";
 
 const 연습실 = (id: number, name: string): Room => ({
   id,
@@ -64,7 +65,7 @@ describe("연습실 상세 조회(getRoom)", () => {
     const findById = jest.fn<IRoomRepo["findById"]>().mockResolvedValue(null);
     const { getRoom } = createRoomService(findAll, findById);
 
-    const err = await getRoom(999).catch((e) => e as BusinessException);
+    const err = await catchBusinessException(() => getRoom(999));
 
     expect(err).toBeInstanceOf(BusinessException);
     expect(err.message).toBe("존재하지 않는 연습실입니다.");
