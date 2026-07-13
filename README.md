@@ -124,24 +124,60 @@ Base URL — 로컬 `http://localhost:3000` / 배포 `https://music-spot-backend
 
 ## 엔드포인트 요약
 
-| 메서드 | 경로                 | 인증 | 설명                        |
-| ------ | -------------------- | :--: | --------------------------- |
-| GET    | `/health`            |      | 서버 상태 확인              |
-| POST   | `/api/auth/signup`   |      | 회원가입                    |
-| POST   | `/api/auth/signin`   |      | 로그인                      |
-| POST   | `/api/auth/signout`  |      | 로그아웃                    |
-| GET    | `/api/users/me`      |  🔒  | 내 정보 조회                |
-| GET    | `/api/rooms`         |      | 연습실 검색 (지역·키워드)   |
-| GET    | `/api/rooms/regions` |      | 지역 목록 (드롭다운용)      |
-| GET    | `/api/rooms/:id`     |      | 연습실 상세                 |
-| POST   | `/api/rooms`         |  🔒  | 연습실·합주실 등록          |
-| DELETE | `/api/rooms/:id`     |  🔒  | 연습실 삭제 (등록자 본인만) |
-| GET    | `/api/posts`         |      | 커뮤니티 글 목록            |
-| POST   | `/api/posts`         |  🔒  | 글 작성                     |
-| GET    | `/api/posts/:id`     |      | 글 상세                     |
-| DELETE | `/api/posts/:id`     |  🔒  | 글 삭제 (작성자 본인만)     |
+| 메서드 | 경로                 | 인증 | 설명                          |
+| ------ | -------------------- | :--: | ----------------------------- |
+| GET    | `/health`            |      | 서버 상태 + 사용 현황·DB 용량 |
+| POST   | `/api/auth/signup`   |      | 회원가입                      |
+| POST   | `/api/auth/signin`   |      | 로그인                        |
+| POST   | `/api/auth/signout`  |      | 로그아웃                      |
+| GET    | `/api/users/me`      |  🔒  | 내 정보 조회                  |
+| GET    | `/api/rooms`         |      | 연습실 검색 (지역·키워드)     |
+| GET    | `/api/rooms/regions` |      | 지역 목록 (드롭다운용)        |
+| GET    | `/api/rooms/:id`     |      | 연습실 상세                   |
+| POST   | `/api/rooms`         |  🔒  | 연습실·합주실 등록            |
+| DELETE | `/api/rooms/:id`     |  🔒  | 연습실 삭제 (등록자 본인만)   |
+| GET    | `/api/posts`         |      | 커뮤니티 글 목록              |
+| POST   | `/api/posts`         |  🔒  | 글 작성                       |
+| GET    | `/api/posts/:id`     |      | 글 상세                       |
+| DELETE | `/api/posts/:id`     |  🔒  | 글 삭제 (작성자 본인만)       |
 
 🔒 = `Authorization: Bearer <token>` 헤더 필요
+
+---
+
+## GET `/health` — 서버 상태 + 사용 현황
+
+Render의 상태 확인과 랜딩의 웜업 요청이 여기로 옵니다. **없애면 배포가 깨집니다.**
+
+사진이 DB에 통째로 들어가는 구조라, 여기서 용량이 얼마나 찼는지 함께 보여줍니다.
+
+```json
+{
+  "status": "ok",
+  "usage": {
+    "rooms": 577,
+    "registeredRooms": 1,
+    "roomsWithPhotos": 1,
+    "posts": 3,
+    "users": 5
+  },
+  "storage": { "usedMb": 9, "limitMb": 1024, "usedPercent": 0.9 },
+  "env": "production"
+}
+```
+
+| 필드                    | 의미                                                       |
+| ----------------------- | ---------------------------------------------------------- |
+| `usage.rooms`           | 전체 연습실 (크롤링 시드 576곳 + 직접 등록)                |
+| `usage.registeredRooms` | 사용자가 직접 등록한 곳 — **B2B 지표**                     |
+| `usage.roomsWithPhotos` | 그중 사진이 붙은 곳 (용량을 먹는 주범)                     |
+| `storage.limitMb`       | `STORAGE_LIMIT_MB` 환경변수. Render 무료 PostgreSQL은 1GB. |
+| `storage.usedPercent`   | 유료 전환 시점을 알려주는 숫자                             |
+
+> Postgres는 용량이 차면 느려지는 게 아니라 **쓰기가 실패**합니다. 100%에 닿기 전에 유료 플랜으로 올리거나 사진을 외부 저장소로 옮겨야 합니다.
+
+DB가 응답하지 않아도 이 엔드포인트는 **200**을 돌려줍니다(`status: "degraded"`, `usage`/`storage`는 `null`).
+500을 주면 Render가 서버를 재시작하는데, DB 장애는 재시작으로 낫지 않기 때문입니다.
 
 ---
 

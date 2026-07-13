@@ -16,6 +16,9 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.coerce.number().int().positive().default(3600),
   // 쉼표로 구분된 허용 오리진 목록. 비우면 모든 오리진을 허용한다(로컬 개발용).
   CORS_ORIGIN: z.string().default(""),
+  // DB 용량 상한(MB). /health가 얼마나 찼는지 보여줄 때 기준으로 쓴다.
+  // Render 무료 PostgreSQL이 1GB다. 유료로 올리면 이 값도 함께 올린다.
+  STORAGE_LIMIT_MB: z.coerce.number().int().positive().default(1024),
 });
 
 const parsed = envSchema.safeParse(process.env);

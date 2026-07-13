@@ -10,7 +10,8 @@ import {
   notFoundMiddleware,
 } from "./inbound/middlewares/error.middleware.js";
 
-const { authRouter, userRouter, roomRouter, postRouter } = bootstrap();
+const { authRouter, userRouter, roomRouter, postRouter, healthRouter } =
+  bootstrap();
 
 const app = express();
 
@@ -53,9 +54,7 @@ const authLimiter = rateLimit({
 });
 
 // 헬스체크는 Render의 슬립 해제(웜업)에도 쓰이므로 rate limit 앞에 둔다.
-app.get("/health", (req, res) => {
-  res.json({ status: "ok", env: env.NODE_ENV });
-});
+app.use("/health", healthRouter);
 
 app.use("/api", apiLimiter);
 app.use("/api/auth", authLimiter, authRouter);

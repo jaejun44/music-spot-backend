@@ -2,14 +2,18 @@ import { createAuthService } from "./application/services/auth.service.js";
 import { createUserService } from "./application/services/user.service.js";
 import { createRoomService } from "./application/services/room.service.js";
 import { createPostService } from "./application/services/post.service.js";
+import { createHealthService } from "./application/services/health.service.js";
 import { createAuthController } from "./inbound/controllers/auth.controller.js";
 import { createUserController } from "./inbound/controllers/user.controller.js";
 import { createRoomController } from "./inbound/controllers/room.controller.js";
 import { createPostController } from "./inbound/controllers/post.controller.js";
+import { createHealthController } from "./inbound/controllers/health.controller.js";
 import { createAuthMiddleware } from "./inbound/middlewares/auth.middleware.js";
 import { createUserRepo } from "./outbound/repos/user.repo.js";
 import { createRoomRepo } from "./outbound/repos/room.repo.js";
 import { createPostRepo } from "./outbound/repos/post.repo.js";
+import { createStatsRepo } from "./outbound/repos/stats.repo.js";
+import { env } from "./shared/config/env.js";
 import { bcryptUtil } from "./shared/utils/bcrypt.util.js";
 import { signJwt, verifyJwt } from "./shared/utils/jwt.util.js";
 
@@ -37,6 +41,7 @@ export const bootstrap = () => {
     create: createPost,
     deleteById: deletePostById,
   } = createPostRepo();
+  const { getUsage } = createStatsRepo();
 
   // application
   const { signIn, signUp } = createAuthService(
@@ -60,6 +65,7 @@ export const bootstrap = () => {
     createPost,
     deletePostById,
   );
+  const { getHealth } = createHealthService(getUsage, env.STORAGE_LIMIT_MB);
 
   // inbound
   const authMiddleware = createAuthMiddleware(verifyJwt);
@@ -80,6 +86,7 @@ export const bootstrap = () => {
     deletePost,
     authMiddleware,
   );
+  const { router: healthRouter } = createHealthController(getHealth);
 
-  return { authRouter, userRouter, roomRouter, postRouter };
+  return { authRouter, userRouter, roomRouter, postRouter, healthRouter };
 };

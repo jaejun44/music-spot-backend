@@ -152,6 +152,8 @@ npx prisma studio        # DB GUI
 - `src/generated/prisma`는 **gitignore 대상**이다. 빌드 커맨드에 `prisma generate`가 없으면 배포가 깨진다. (`npm run build`에 포함되어 있음)
 - 스키마를 바꿨으면 Render 배포 시 `prisma migrate deploy`가 돌아야 한다. `migrate dev`는 배포 환경에서 쓰지 않는다.
 - 무료 플랜은 15분 무요청 시 잠든다. 프론트가 `/health`로 깨우므로 이 엔드포인트를 없애지 말 것.
+- `/health`는 연습실 수·직접 등록 수·DB 사용량(`usedPercent`)을 함께 준다. 사진이 DB에 들어가는 구조라 **용량이 유료 전환 시점을 알려주는 지표**다. Postgres는 꽉 차면 느려지는 게 아니라 쓰기가 실패하므로, 100% 전에 손써야 한다.
+- `/health`는 DB가 죽어도 200을 준다(`status: "degraded"`). 500을 주면 Render가 재시작하는데 DB 장애는 재시작으로 낫지 않는다.
 - 새 오리진에서 프론트를 띄우면 Render의 `CORS_ORIGIN` 환경변수에 추가해야 한다.
 
 ## 프론트엔드 (`music-spot-landing`)
