@@ -16,9 +16,11 @@ model User {
   email     String   @unique
   password  String
   username  String
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   posts     Post[]
   rooms     Room[]
+  comments  Comment[]
+  likes     Like[]
 }
 
 // 연습실 (크롤링 시드 576곳 + 사용자가 직접 등록한 곳)
@@ -54,13 +56,43 @@ model Room {
 
 // 커뮤니티 게시글
 model Post {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   title     String
   content   String
+  authorId  Int
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments  Comment[]
+  likes     Like[]
+  createdAt DateTime  @default(now())
+  // 수정하면 자동으로 갱신된다. 화면에서 "(수정됨)"을 붙일 근거가 된다.
+  updatedAt DateTime  @updatedAt
+
+  // 목록은 항상 최신순이라 정렬 컬럼에 인덱스를 둔다.
+  @@index([createdAt])
+}
+
+// 게시글 댓글
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  postId    Int
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   authorId  Int
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
-  // 목록은 항상 최신순이라 정렬 컬럼에 인덱스를 둔다.
-  @@index([createdAt])
+  // 상세 화면은 "이 글의 댓글을 오래된 순으로" 읽는다.
+  @@index([postId, createdAt])
+}
+
+// 게시글 좋아요
+model Like {
+  postId    Int
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  // 한 사람이 같은 글에 두 번 누를 수 없다. 중복 방지를 DB가 보장한다.
+  @@id([postId, userId])
 }

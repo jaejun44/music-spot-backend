@@ -6,12 +6,22 @@ import { createHealthService } from "./application/services/health.service.js";
 import { createAuthController } from "./inbound/controllers/auth.controller.js";
 import { createUserController } from "./inbound/controllers/user.controller.js";
 import { createRoomController } from "./inbound/controllers/room.controller.js";
-import { createPostController } from "./inbound/controllers/post.controller.js";
+import {
+  createPostController,
+  createCommentController,
+} from "./inbound/controllers/post.controller.js";
 import { createHealthController } from "./inbound/controllers/health.controller.js";
-import { createAuthMiddleware } from "./inbound/middlewares/auth.middleware.js";
+import {
+  createAuthMiddleware,
+  createOptionalAuthMiddleware,
+} from "./inbound/middlewares/auth.middleware.js";
 import { createUserRepo } from "./outbound/repos/user.repo.js";
 import { createRoomRepo } from "./outbound/repos/room.repo.js";
-import { createPostRepo } from "./outbound/repos/post.repo.js";
+import {
+  createPostRepo,
+  createCommentRepo,
+  createLikeRepo,
+} from "./outbound/repos/post.repo.js";
 import { createStatsRepo } from "./outbound/repos/stats.repo.js";
 import { env } from "./shared/config/env.js";
 import { bcryptUtil } from "./shared/utils/bcrypt.util.js";
@@ -39,8 +49,15 @@ export const bootstrap = () => {
     findMany: findPosts,
     findById: findPostById,
     create: createPost,
+    update: updatePost,
     deleteById: deletePostById,
   } = createPostRepo();
+  const {
+    findById: findCommentById,
+    create: createComment,
+    deleteById: deleteCommentById,
+  } = createCommentRepo();
+  const { toggle: toggleLike } = createLikeRepo();
   const { getUsage } = createStatsRepo();
 
   // application
@@ -59,16 +76,32 @@ export const bootstrap = () => {
       createRoom,
       deleteRoomById,
     );
-  const { getPosts, getPost, writePost, deletePost } = createPostService(
+  const {
+    getPosts,
+    getPost,
+    writePost,
+    editPost,
+    deletePost,
+    writeComment,
+    deleteComment,
+    likePost,
+  } = createPostService(
     findPosts,
     findPostById,
     createPost,
+    updatePost,
     deletePostById,
+    findCommentById,
+    createComment,
+    deleteCommentById,
+    toggleLike,
   );
   const { getHealth } = createHealthService(getUsage, env.STORAGE_LIMIT_MB);
 
   // inbound
   const authMiddleware = createAuthMiddleware(verifyJwt);
+  // 커뮤니티 목록·상세는 비로그인도 봐야 하지만, 로그인했으면 좋아요 여부를 알려줘야 한다.
+  const optionalAuthMiddleware = createOptionalAuthMiddleware(verifyJwt);
   const { router: authRouter } = createAuthController(signIn, signUp);
   const { router: userRouter } = createUserController(getMe, authMiddleware);
   const { router: roomRouter } = createRoomController(
@@ -83,10 +116,26 @@ export const bootstrap = () => {
     getPosts,
     getPost,
     writePost,
+    editPost,
     deletePost,
+    writeComment,
+    deleteComment,
+    likePost,
+    authMiddleware,
+    optionalAuthMiddleware,
+  );
+  const { router: commentRouter } = createCommentController(
+    deleteComment,
     authMiddleware,
   );
   const { router: healthRouter } = createHealthController(getHealth);
 
-  return { authRouter, userRouter, roomRouter, postRouter, healthRouter };
+  return {
+    authRouter,
+    userRouter,
+    roomRouter,
+    postRouter,
+    commentRouter,
+    healthRouter,
+  };
 };

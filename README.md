@@ -47,7 +47,7 @@
 | 인증          | JSON Web Token, bcrypt            |
 | 검증          | zod                               |
 | 보안          | helmet, cors, express-rate-limit  |
-| 테스트        | Jest + ts-jest (73개 통과)        |
+| 테스트        | Jest + ts-jest (83개 통과)        |
 | 배포          | Render (Web Service + PostgreSQL) |
 
 ## 아키텍처 — 헥사고날 (포트 & 어댑터)
@@ -138,6 +138,24 @@ model Post {
   content   String
   authorId  Int      // User와 관계. 유저가 지워지면 글도 함께 지워진다
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt  // createdAt과 다르면 "수정됨"
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  postId    Int      // 글이 지워지면 댓글도 함께 지워진다 (Cascade)
+  authorId  Int
+  createdAt DateTime @default(now())
+}
+
+model Like {
+  postId    Int
+  userId    Int
+  createdAt DateTime @default(now())
+
+  // 한 사람이 같은 글에 두 번 누를 수 없다. 중복 방지를 DB가 보장한다.
+  @@id([postId, userId])
 }
 ```
 
@@ -153,22 +171,26 @@ Base URL — 로컬 `http://localhost:3000` / 배포 `https://music-spot-backend
 
 ## 엔드포인트 요약
 
-| 메서드 | 경로                 | 인증 | 설명                          |
-| ------ | -------------------- | :--: | ----------------------------- |
-| GET    | `/health`            |      | 서버 상태 + 사용 현황·DB 용량 |
-| POST   | `/api/auth/signup`   |      | 회원가입                      |
-| POST   | `/api/auth/signin`   |      | 로그인                        |
-| POST   | `/api/auth/signout`  |      | 로그아웃                      |
-| GET    | `/api/users/me`      |  🔒  | 내 정보 조회                  |
-| GET    | `/api/rooms`         |      | 연습실 검색 (지역·키워드)     |
-| GET    | `/api/rooms/regions` |      | 지역 목록 (드롭다운용)        |
-| GET    | `/api/rooms/:id`     |      | 연습실 상세                   |
-| POST   | `/api/rooms`         |  🔒  | 연습실·합주실 등록            |
-| DELETE | `/api/rooms/:id`     |  🔒  | 연습실 삭제 (등록자 본인만)   |
-| GET    | `/api/posts`         |      | 커뮤니티 글 목록              |
-| POST   | `/api/posts`         |  🔒  | 글 작성                       |
-| GET    | `/api/posts/:id`     |      | 글 상세                       |
-| DELETE | `/api/posts/:id`     |  🔒  | 글 삭제 (작성자 본인만)       |
+| 메서드 | 경로                      | 인증 | 설명                                   |
+| ------ | ------------------------- | :--: | -------------------------------------- |
+| GET    | `/health`                 |      | 서버 상태 + 사용 현황·DB 용량          |
+| POST   | `/api/auth/signup`        |      | 회원가입                               |
+| POST   | `/api/auth/signin`        |      | 로그인                                 |
+| POST   | `/api/auth/signout`       |      | 로그아웃                               |
+| GET    | `/api/users/me`           |  🔒  | 내 정보 조회                           |
+| GET    | `/api/rooms`              |      | 연습실 검색 (지역·키워드)              |
+| GET    | `/api/rooms/regions`      |      | 지역 목록 (드롭다운용)                 |
+| GET    | `/api/rooms/:id`          |      | 연습실 상세                            |
+| POST   | `/api/rooms`              |  🔒  | 연습실·합주실 등록                     |
+| DELETE | `/api/rooms/:id`          |  🔒  | 연습실 삭제 (등록자 본인만)            |
+| GET    | `/api/posts`              |      | 커뮤니티 글 목록 (좋아요·댓글 수 포함) |
+| POST   | `/api/posts`              |  🔒  | 글 작성                                |
+| GET    | `/api/posts/:id`          |      | 글 상세 (댓글 포함)                    |
+| PATCH  | `/api/posts/:id`          |  🔒  | 글 수정 (작성자 본인만)                |
+| DELETE | `/api/posts/:id`          |  🔒  | 글 삭제 (작성자 본인만)                |
+| POST   | `/api/posts/:id/like`     |  🔒  | 좋아요 토글                            |
+| POST   | `/api/posts/:id/comments` |  🔒  | 댓글 작성                              |
+| DELETE | `/api/comments/:id`       |  🔒  | 댓글 삭제 (작성자 본인만)              |
 
 🔒 = `Authorization: Bearer <token>` 헤더 필요
 
@@ -446,6 +468,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 최신순입니다. `page`(기본 1) · `size`(기본 10, 최대 30)를 받습니다.
 
+**토큰은 선택입니다.** 없으면 그냥 보여주고, 있으면 `liked`(내가 좋아요를 눌렀는지)를 채워 줍니다.
+
 **응답 `200 OK`**
 
 ```json
@@ -456,7 +480,11 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
       "title": "홍대 합주 멤버 구합니다",
       "content": "기타/보컬 있고 드럼 구해요.",
       "author": { "id": 4, "username": "테스터" },
-      "createdAt": "2026-07-13T09:43:48.997Z"
+      "createdAt": "2026-07-13T09:43:48.997Z",
+      "updatedAt": "2026-07-13T09:43:48.997Z",
+      "likeCount": 2,
+      "commentCount": 1,
+      "liked": false
     }
   ],
   "total": 1,
@@ -468,6 +496,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 작성자는 `{ id, username }`만 나갑니다. 이메일과 비밀번호 해시는 절대 포함되지 않습니다.
+`updatedAt`이 `createdAt`과 다르면 수정된 글입니다(화면에서 "수정됨"으로 표시).
 
 ---
 
@@ -488,15 +517,53 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ---
 
-## GET `/api/posts/:id` — 글 상세
+## GET `/api/posts/:id` — 글 상세 (댓글 포함)
 
-**응답 `200 OK`** — `{ "post": { ... } }` / 없는 id면 `404 "존재하지 않는 게시글입니다."`
+목록 항목에 `comments`가 더해집니다. 화면 하나를 그리는 데 왕복 한 번이면 됩니다.
+
+```json
+{
+  "post": {
+    "id": 2,
+    "title": "홍대 합주 멤버 구합니다",
+    "likeCount": 2,
+    "commentCount": 1,
+    "liked": true,
+    "comments": [
+      {
+        "id": 10,
+        "content": "저 드럼 칩니다!",
+        "author": { "id": 5, "username": "드러머" },
+        "createdAt": "2026-07-13T10:02:11.000Z"
+      }
+    ]
+  }
+}
+```
+
+댓글은 **오래된 순**입니다. 대화 흐름이 끊기지 않아야 하기 때문입니다.
+없는 id면 `404 "존재하지 않는 게시글입니다."`
+
+---
+
+## PATCH `/api/posts/:id` — 글 수정 🔒
+
+**작성자 본인만** 고칠 수 있습니다. 검증 규칙은 작성과 같습니다.
+
+**요청** — `{ "title": "...", "content": "..." }` / **응답 `200 OK`** — `{ "post": { ... } }`
+
+| 상태  | 상황           | 메시지                               |
+| ----- | -------------- | ------------------------------------ |
+| `401` | 토큰 없음·만료 | `"로그인이 필요합니다."`             |
+| `403` | 남의 글        | `"내가 쓴 글만 수정할 수 있습니다."` |
+| `404` | 없는 id        | `"존재하지 않는 게시글입니다."`      |
 
 ---
 
 ## DELETE `/api/posts/:id` — 글 삭제 🔒
 
 **작성자 본인만** 지울 수 있습니다. 주인이 아니면 DB에 손도 대지 않고 거절합니다.
+글이 지워지면 **댓글과 좋아요도 함께** 사라집니다(DB의 Cascade).
 
 **응답 `200 OK`** — `{ "message": "글을 삭제했습니다." }`
 
@@ -505,6 +572,49 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 | `401` | 토큰 없음·만료 | `"로그인이 필요합니다."`             |
 | `403` | 남의 글        | `"내가 쓴 글만 삭제할 수 있습니다."` |
 | `404` | 없는 id        | `"존재하지 않는 게시글입니다."`      |
+
+---
+
+## POST `/api/posts/:id/like` — 좋아요 토글 🔒
+
+누른 적 없으면 누르고, 이미 눌렀으면 **취소**합니다. 별도의 취소 엔드포인트는 없습니다.
+
+**응답 `200 OK`** — `{ "liked": true, "likeCount": 3 }`
+
+한 사람이 같은 글에 두 번 누를 수 없도록 `(postId, userId)`를 기본키로 두어 **DB가 중복을 막습니다.**
+
+| 상태  | 상황           | 메시지                          |
+| ----- | -------------- | ------------------------------- |
+| `401` | 토큰 없음·만료 | `"로그인이 필요합니다."`        |
+| `404` | 없는 글        | `"존재하지 않는 게시글입니다."` |
+
+---
+
+## POST `/api/posts/:id/comments` — 댓글 작성 🔒
+
+**요청** — `{ "content": "저 드럼 칩니다!" }` (1~500자)
+
+**응답 `201 Created`** — `{ "comment": { "id": 10, "content": "...", "author": { "id": 5, "username": "드러머" }, "createdAt": "..." } }`
+
+| 상태  | 상황               | 메시지                                                                |
+| ----- | ------------------ | --------------------------------------------------------------------- |
+| `400` | 내용 비었거나 초과 | `"댓글 내용을 입력해주세요."`                                         |
+| `401` | 토큰 없음·만료     | `"로그인이 필요합니다."`                                              |
+| `404` | 없는 글            | `"존재하지 않는 게시글입니다."` (아무도 못 보는 유령 댓글을 막습니다) |
+
+---
+
+## DELETE `/api/comments/:id` — 댓글 삭제 🔒
+
+**작성자 본인만** 지울 수 있습니다. 글쓴이라도 남의 댓글은 지울 수 없습니다.
+
+**응답 `200 OK`** — `{ "message": "댓글을 삭제했습니다." }`
+
+| 상태  | 상황           | 메시지                                 |
+| ----- | -------------- | -------------------------------------- |
+| `401` | 토큰 없음·만료 | `"로그인이 필요합니다."`               |
+| `403` | 남의 댓글      | `"내가 쓴 댓글만 삭제할 수 있습니다."` |
+| `404` | 없는 id        | `"존재하지 않는 댓글입니다."`          |
 
 ---
 
@@ -617,7 +727,7 @@ FROM "Post" p JOIN "User" u ON u.id = p."authorId" ORDER BY p."createdAt" DESC;
 npm test
 ```
 
-서비스·도메인·인증 미들웨어에 대한 단위 테스트 **73개**가 있습니다. DB 없이 돌아갑니다 (가짜 의존성 주입).
+서비스·도메인·인증 미들웨어에 대한 단위 테스트 **83개**가 있습니다. DB 없이 돌아갑니다 (가짜 의존성 주입).
 
 | 파일                      | 검증 내용                                                                                                      |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------- |

@@ -10,8 +10,14 @@ import {
   notFoundMiddleware,
 } from "./inbound/middlewares/error.middleware.js";
 
-const { authRouter, userRouter, roomRouter, postRouter, healthRouter } =
-  bootstrap();
+const {
+  authRouter,
+  userRouter,
+  roomRouter,
+  postRouter,
+  commentRouter,
+  healthRouter,
+} = bootstrap();
 
 const app = express();
 
@@ -61,6 +67,7 @@ app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/users", userRouter);
 app.use("/api/rooms", roomRouter);
 app.use("/api/posts", postRouter);
+app.use("/api/comments", commentRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);

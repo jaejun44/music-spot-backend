@@ -51,3 +51,45 @@ export const createAuthMiddleware = (verifyJwt: IJwtUtil["verifyJwt"]) => {
 };
 
 export type AuthMiddlewareType = ReturnType<typeof createAuthMiddleware>;
+
+/**
+ * 로그인해도 되고 안 해도 되는 요청용.
+ *
+ * 커뮤니티 목록은 누구나 본다. 다만 로그인한 사람에게는 "내가 좋아요를 눌렀는지"까지 보여줘야 한다.
+ * 그래서 토큰이 있으면 읽어 userId를 실어주고, 없거나 상해 있으면 **막지 않고 그냥 통과시킨다.**
+ * (막아버리면 비로그인 사용자가 글을 아예 못 본다)
+ */
+export const createOptionalAuthMiddleware = (
+  verifyJwt: IJwtUtil["verifyJwt"],
+) => {
+  const optionalAuthMiddleware = (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+      return next();
+    }
+
+    try {
+      const decoded = verifyJwt(authHeader.slice("Bearer ".length).trim()) as {
+        userId?: number;
+      };
+
+      if (typeof decoded?.userId === "number") {
+        req.userId = decoded.userId;
+      }
+    } catch {
+      // 토큰이 만료됐거나 위조됐다. 로그인 안 한 사람과 똑같이 대한다.
+    }
+
+    return next();
+  };
+
+  return optionalAuthMiddleware;
+};
+
+export type OptionalAuthMiddlewareType = ReturnType<
+  typeof createOptionalAuthMiddleware
+>;
