@@ -18,9 +18,10 @@ model User {
   username  String
   createdAt DateTime @default(now())
   posts     Post[]
+  rooms     Room[]
 }
 
-// 연습실 (스페이스클라우드 크롤링 데이터를 정제해 시드)
+// 연습실 (크롤링 시드 576곳 + 사용자가 직접 등록한 곳)
 model Room {
   id           Int      @id @default(autoincrement())
   name         String
@@ -34,11 +35,17 @@ model Room {
   rating       Float?
   reviewCount  Int?
   hours        String? // 예: "0~24시"
-  sourceUrl    String   @unique // 원본 상세 페이지. 재시드 시 중복을 막는 기준 키
+  // 크롤링한 곳의 원본 상세 페이지. 재시드 시 중복을 막는 기준 키.
+  // 사용자가 직접 등록한 곳은 원본이 없으므로 null이다.
+  sourceUrl    String?  @unique
+  // 등록자. 크롤링 시드는 주인이 없어(null) 아무도 지울 수 없다.
+  ownerId      Int?
+  owner        User?    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   createdAt    DateTime @default(now())
 
   // 지역 필터가 항상 함께 걸리므로 복합 인덱스로 묶는다.
   @@index([sido, gungu])
+  @@index([ownerId])
 }
 
 // 커뮤니티 게시글

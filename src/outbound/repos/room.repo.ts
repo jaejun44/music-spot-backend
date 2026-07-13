@@ -29,8 +29,11 @@ export const createRoomRepo = (): IRoomRepo => {
     const [rooms, total] = await prismaClient.$transaction([
       prismaClient.room.findMany({
         where,
-        // 후기 많은 곳을 위로. Postgres는 DESC에서 NULL을 먼저 주므로 명시적으로 뒤로 보낸다.
         orderBy: [
+          // 사용자가 직접 등록한 곳(ownerId 있음)을 먼저 보여준다.
+          // 신규 등록은 후기가 없어, 후기순으로만 정렬하면 576곳 뒤에 영영 묻힌다.
+          { ownerId: { sort: "desc", nulls: "last" } },
+          // 그다음은 후기 많은 곳. Postgres는 DESC에서 NULL을 먼저 주므로 뒤로 보낸다.
           { reviewCount: { sort: "desc", nulls: "last" } },
           { id: "asc" },
         ],
@@ -62,5 +65,15 @@ export const createRoomRepo = (): IRoomRepo => {
     }));
   };
 
-  return { search, findById, countByRegion };
+  // 연습실 등록. 평점·후기 수·이미지는 크롤링 데이터에만 있는 값이라 비워 둔다.
+  const create: IRoomRepo["create"] = async (room) => {
+    return prismaClient.room.create({ data: room });
+  };
+
+  // 연습실 삭제. 등록자 확인은 service가 이미 끝냈다.
+  const deleteById: IRoomRepo["deleteById"] = async (id) => {
+    await prismaClient.room.delete({ where: { id } });
+  };
+
+  return { search, findById, countByRegion, create, deleteById };
 };

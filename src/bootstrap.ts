@@ -23,7 +23,13 @@ import { signJwt, verifyJwt } from "./shared/utils/jwt.util.js";
 export const bootstrap = () => {
   // outbound
   const { findUserByEmail, findUserById, createUser } = createUserRepo();
-  const { search, findById, countByRegion } = createRoomRepo();
+  const {
+    search,
+    findById,
+    countByRegion,
+    create: createRoom,
+    deleteById: deleteRoomById,
+  } = createRoomRepo();
   // 연습실 repo와 이름이 겹쳐(findById) 게시글 쪽은 이름을 바꿔 받는다.
   const {
     findMany: findPosts,
@@ -40,11 +46,14 @@ export const bootstrap = () => {
     bcryptUtil,
   );
   const { getMe } = createUserService(findUserById);
-  const { searchRooms, getRoom, getRegions } = createRoomService(
-    search,
-    findById,
-    countByRegion,
-  );
+  const { searchRooms, getRoom, getRegions, registerRoom, deleteRoom } =
+    createRoomService(
+      search,
+      findById,
+      countByRegion,
+      createRoom,
+      deleteRoomById,
+    );
   const { getPosts, getPost, writePost, deletePost } = createPostService(
     findPosts,
     findPostById,
@@ -60,6 +69,9 @@ export const bootstrap = () => {
     searchRooms,
     getRoom,
     getRegions,
+    registerRoom,
+    deleteRoom,
+    authMiddleware,
   );
   const { router: postRouter } = createPostController(
     getPosts,

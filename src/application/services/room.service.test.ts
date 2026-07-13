@@ -19,6 +19,7 @@ const 연습실 = (id: number, name: string): Room => ({
   reviewCount: 10,
   hours: "0~24시",
   sourceUrl: `https://www.spacecloud.kr/space/${id}`,
+  ownerId: null,
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
 });
 
@@ -30,7 +31,15 @@ describe("연습실 검색(searchRooms)", () => {
       .mockResolvedValue({ rooms, total: 2 });
     const findById = jest.fn<IRoomRepo["findById"]>();
     const countByRegion = jest.fn<IRoomRepo["countByRegion"]>();
-    const { searchRooms } = createRoomService(search, findById, countByRegion);
+    const create = jest.fn<IRoomRepo["create"]>();
+    const deleteById = jest.fn<IRoomRepo["deleteById"]>();
+    const { searchRooms } = createRoomService(
+      search,
+      findById,
+      countByRegion,
+      create,
+      deleteById,
+    );
 
     const result = await searchRooms({
       sido: "서울",
@@ -65,7 +74,15 @@ describe("연습실 검색(searchRooms)", () => {
       .mockResolvedValue({ rooms: [], total: 30 });
     const findById = jest.fn<IRoomRepo["findById"]>();
     const countByRegion = jest.fn<IRoomRepo["countByRegion"]>();
-    const { searchRooms } = createRoomService(search, findById, countByRegion);
+    const create = jest.fn<IRoomRepo["create"]>();
+    const deleteById = jest.fn<IRoomRepo["deleteById"]>();
+    const { searchRooms } = createRoomService(
+      search,
+      findById,
+      countByRegion,
+      create,
+      deleteById,
+    );
 
     const result = await searchRooms({ page: 2, size: 12 });
 
@@ -81,7 +98,15 @@ describe("연습실 검색(searchRooms)", () => {
       .mockResolvedValue({ rooms: [], total: 0 });
     const findById = jest.fn<IRoomRepo["findById"]>();
     const countByRegion = jest.fn<IRoomRepo["countByRegion"]>();
-    const { searchRooms } = createRoomService(search, findById, countByRegion);
+    const create = jest.fn<IRoomRepo["create"]>();
+    const deleteById = jest.fn<IRoomRepo["deleteById"]>();
+    const { searchRooms } = createRoomService(
+      search,
+      findById,
+      countByRegion,
+      create,
+      deleteById,
+    );
 
     const result = await searchRooms({
       keyword: "없는연습실",
@@ -101,7 +126,15 @@ describe("연습실 검색(searchRooms)", () => {
       .mockRejectedValue(new Error("DB 연결 실패"));
     const findById = jest.fn<IRoomRepo["findById"]>();
     const countByRegion = jest.fn<IRoomRepo["countByRegion"]>();
-    const { searchRooms } = createRoomService(search, findById, countByRegion);
+    const create = jest.fn<IRoomRepo["create"]>();
+    const deleteById = jest.fn<IRoomRepo["deleteById"]>();
+    const { searchRooms } = createRoomService(
+      search,
+      findById,
+      countByRegion,
+      create,
+      deleteById,
+    );
 
     await expect(searchRooms({ page: 1, size: 12 })).rejects.toThrow(
       "DB 연결 실패",
@@ -115,7 +148,15 @@ describe("연습실 상세 조회(getRoom)", () => {
     const search = jest.fn<IRoomRepo["search"]>();
     const findById = jest.fn<IRoomRepo["findById"]>().mockResolvedValue(room);
     const countByRegion = jest.fn<IRoomRepo["countByRegion"]>();
-    const { getRoom } = createRoomService(search, findById, countByRegion);
+    const create = jest.fn<IRoomRepo["create"]>();
+    const deleteById = jest.fn<IRoomRepo["deleteById"]>();
+    const { getRoom } = createRoomService(
+      search,
+      findById,
+      countByRegion,
+      create,
+      deleteById,
+    );
 
     const result = await getRoom(1);
 
@@ -127,7 +168,15 @@ describe("연습실 상세 조회(getRoom)", () => {
     const search = jest.fn<IRoomRepo["search"]>();
     const findById = jest.fn<IRoomRepo["findById"]>().mockResolvedValue(null);
     const countByRegion = jest.fn<IRoomRepo["countByRegion"]>();
-    const { getRoom } = createRoomService(search, findById, countByRegion);
+    const create = jest.fn<IRoomRepo["create"]>();
+    const deleteById = jest.fn<IRoomRepo["deleteById"]>();
+    const { getRoom } = createRoomService(
+      search,
+      findById,
+      countByRegion,
+      create,
+      deleteById,
+    );
 
     const err = await catchBusinessException(() => getRoom(999));
 
@@ -142,7 +191,15 @@ describe("연습실 상세 조회(getRoom)", () => {
       .fn<IRoomRepo["findById"]>()
       .mockResolvedValue(undefined as never);
     const countByRegion = jest.fn<IRoomRepo["countByRegion"]>();
-    const { getRoom } = createRoomService(search, findById, countByRegion);
+    const create = jest.fn<IRoomRepo["create"]>();
+    const deleteById = jest.fn<IRoomRepo["deleteById"]>();
+    const { getRoom } = createRoomService(
+      search,
+      findById,
+      countByRegion,
+      create,
+      deleteById,
+    );
 
     await expect(getRoom(1)).rejects.toThrow("존재하지 않는 연습실입니다.");
   });
@@ -153,7 +210,15 @@ describe("연습실 상세 조회(getRoom)", () => {
       .fn<IRoomRepo["findById"]>()
       .mockRejectedValue(new Error("DB 연결 실패"));
     const countByRegion = jest.fn<IRoomRepo["countByRegion"]>();
-    const { getRoom } = createRoomService(search, findById, countByRegion);
+    const create = jest.fn<IRoomRepo["create"]>();
+    const deleteById = jest.fn<IRoomRepo["deleteById"]>();
+    const { getRoom } = createRoomService(
+      search,
+      findById,
+      countByRegion,
+      create,
+      deleteById,
+    );
 
     await expect(getRoom(1)).rejects.toThrow("DB 연결 실패");
   });
@@ -170,7 +235,15 @@ describe("지역 목록 조회(getRegions)", () => {
         { sido: "서울", gungu: "강남구", count: 39 },
         { sido: "서울", gungu: "마포구", count: 57 },
       ]);
-    const { getRegions } = createRoomService(search, findById, countByRegion);
+    const create = jest.fn<IRoomRepo["create"]>();
+    const deleteById = jest.fn<IRoomRepo["deleteById"]>();
+    const { getRegions } = createRoomService(
+      search,
+      findById,
+      countByRegion,
+      create,
+      deleteById,
+    );
 
     const regions = await getRegions();
 
@@ -185,5 +258,161 @@ describe("지역 목록 조회(getRegions)", () => {
       },
       { sido: "경기", count: 25, gungus: [{ gungu: "고양시", count: 25 }] },
     ]);
+  });
+});
+
+describe("연습실 등록(registerRoom)", () => {
+  const 등록요청 = {
+    name: "우리 밴드 합주실",
+    address: "서울특별시 마포구 동교동 155-20 지하 1층",
+    category: "합주실",
+    pricePerHour: 15000,
+    phone: "010-1234-5678",
+    hours: "10~24시",
+    ownerId: 7,
+  };
+
+  test("주소에서 지역을 뽑아 repo에 넘긴다", async () => {
+    const search = jest.fn<IRoomRepo["search"]>();
+    const findById = jest.fn<IRoomRepo["findById"]>();
+    const countByRegion = jest.fn<IRoomRepo["countByRegion"]>();
+    const create = jest
+      .fn<IRoomRepo["create"]>()
+      .mockResolvedValue(연습실(1, "우리 밴드 합주실"));
+    const deleteById = jest.fn<IRoomRepo["deleteById"]>();
+    const { registerRoom } = createRoomService(
+      search,
+      findById,
+      countByRegion,
+      create,
+      deleteById,
+    );
+
+    await registerRoom(등록요청);
+
+    // 지역을 사용자에게 따로 묻지 않는다. 크롤링 시드와 같은 표기("서울")여야 같은 필터에 걸린다.
+    expect(create).toHaveBeenCalledWith({
+      ...등록요청,
+      sido: "서울",
+      gungu: "마포구",
+    });
+  });
+
+  test("지역을 알아볼 수 없는 주소면 400을 던지고 DB에 쓰지 않는다", async () => {
+    const search = jest.fn<IRoomRepo["search"]>();
+    const findById = jest.fn<IRoomRepo["findById"]>();
+    const countByRegion = jest.fn<IRoomRepo["countByRegion"]>();
+    const create = jest.fn<IRoomRepo["create"]>();
+    const deleteById = jest.fn<IRoomRepo["deleteById"]>();
+    const { registerRoom } = createRoomService(
+      search,
+      findById,
+      countByRegion,
+      create,
+      deleteById,
+    );
+
+    const err = await catchBusinessException(() =>
+      registerRoom({ ...등록요청, address: "홍대 근처 지하" }),
+    );
+
+    expect(err.statusCode).toBe(400);
+    // 지역이 비면 검색에 영영 걸리지 않는 연습실이 생긴다. 저장 자체를 막는다.
+    expect(create).not.toHaveBeenCalled();
+  });
+});
+
+describe("연습실 삭제(deleteRoom)", () => {
+  test("등록자 본인이면 지운다", async () => {
+    const search = jest.fn<IRoomRepo["search"]>();
+    const findById = jest
+      .fn<IRoomRepo["findById"]>()
+      .mockResolvedValue({ ...연습실(1, "우리 밴드 합주실"), ownerId: 7 });
+    const countByRegion = jest.fn<IRoomRepo["countByRegion"]>();
+    const create = jest.fn<IRoomRepo["create"]>();
+    const deleteById = jest.fn<IRoomRepo["deleteById"]>();
+    const { deleteRoom } = createRoomService(
+      search,
+      findById,
+      countByRegion,
+      create,
+      deleteById,
+    );
+
+    await deleteRoom({ roomId: 1, userId: 7 });
+
+    expect(deleteById).toHaveBeenCalledWith(1);
+  });
+
+  test("남이 등록한 연습실이면 403을 던지고 DB에서 지우지 않는다", async () => {
+    const search = jest.fn<IRoomRepo["search"]>();
+    const findById = jest
+      .fn<IRoomRepo["findById"]>()
+      .mockResolvedValue({ ...연습실(1, "우리 밴드 합주실"), ownerId: 7 });
+    const countByRegion = jest.fn<IRoomRepo["countByRegion"]>();
+    const create = jest.fn<IRoomRepo["create"]>();
+    const deleteById = jest.fn<IRoomRepo["deleteById"]>();
+    const { deleteRoom } = createRoomService(
+      search,
+      findById,
+      countByRegion,
+      create,
+      deleteById,
+    );
+
+    const err = await catchBusinessException(() =>
+      deleteRoom({ roomId: 1, userId: 999 }),
+    );
+
+    expect(err.statusCode).toBe(403);
+    expect(err.message).toBe("내가 등록한 연습실만 삭제할 수 있습니다.");
+    expect(deleteById).not.toHaveBeenCalled();
+  });
+
+  test("크롤링으로 들어온 연습실(주인 없음)은 아무도 지울 수 없다", async () => {
+    const search = jest.fn<IRoomRepo["search"]>();
+    // 시드 데이터는 ownerId가 null이다.
+    const findById = jest
+      .fn<IRoomRepo["findById"]>()
+      .mockResolvedValue(연습실(1, "홍대 예쎄뮤직 연습실 합주실"));
+    const countByRegion = jest.fn<IRoomRepo["countByRegion"]>();
+    const create = jest.fn<IRoomRepo["create"]>();
+    const deleteById = jest.fn<IRoomRepo["deleteById"]>();
+    const { deleteRoom } = createRoomService(
+      search,
+      findById,
+      countByRegion,
+      create,
+      deleteById,
+    );
+
+    const err = await catchBusinessException(() =>
+      deleteRoom({ roomId: 1, userId: 7 }),
+    );
+
+    expect(err.statusCode).toBe(403);
+    expect(deleteById).not.toHaveBeenCalled();
+  });
+
+  test("없는 연습실이면 404를 던지고 DB에서 지우지 않는다", async () => {
+    const search = jest.fn<IRoomRepo["search"]>();
+    const findById = jest.fn<IRoomRepo["findById"]>().mockResolvedValue(null);
+    const countByRegion = jest.fn<IRoomRepo["countByRegion"]>();
+    const create = jest.fn<IRoomRepo["create"]>();
+    const deleteById = jest.fn<IRoomRepo["deleteById"]>();
+    const { deleteRoom } = createRoomService(
+      search,
+      findById,
+      countByRegion,
+      create,
+      deleteById,
+    );
+
+    const err = await catchBusinessException(() =>
+      deleteRoom({ roomId: 999, userId: 7 }),
+    );
+
+    expect(err.statusCode).toBe(404);
+    expect(deleteById).not.toHaveBeenCalled();
   });
 });
