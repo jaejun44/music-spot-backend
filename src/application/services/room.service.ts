@@ -15,6 +15,7 @@ export type SearchRoomsParams = {
   size: number;
 };
 
+// 지역(sido·gungu)은 받지 않는다. 주소에서 뽑아낸다.
 export type RegisterRoomParams = {
   name: string;
   address: string;
@@ -22,6 +23,8 @@ export type RegisterRoomParams = {
   pricePerHour: number | null;
   phone: string | null;
   hours: string | null;
+  homepageUrl: string | null;
+  images: string[];
   ownerId: number;
 };
 

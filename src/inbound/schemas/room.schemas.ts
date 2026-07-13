@@ -72,6 +72,27 @@ export const registerRoomDataSchema = z.object({
     .transform((value) => value ?? null),
   phone: optionalField(20, "전화번호는 최대 20자입니다."),
   hours: optionalField(40, "영업시간은 최대 40자입니다."),
+  homepageUrl: z
+    .url("홈페이지 주소는 http://... 또는 https://... 형태여야 합니다.")
+    .max(300, "링크가 너무 깁니다.")
+    // 빈 문자열은 "입력 안 함"이지 잘못된 URL이 아니다.
+    .or(z.literal(""))
+    .nullish()
+    .transform((value) => value || null),
+  // 파일 저장소가 없어 사진을 data URL로 받는다. 브라우저가 800px·JPEG로 줄여서 보낸다.
+  // 줄이지 않은 원본이 그대로 들어오면 DB가 금방 부푼다. 장수와 크기를 둘 다 막는다.
+  images: z
+    .array(
+      z
+        .string()
+        .regex(
+          /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/,
+          "사진 형식이 올바르지 않습니다.",
+        )
+        .max(700_000, "사진 한 장이 너무 큽니다. (약 500KB 이하)"),
+    )
+    .max(5, "사진은 최대 5장까지 올릴 수 있습니다.")
+    .default([]),
 });
 
 export type RoomIdParam = z.infer<typeof roomIdParamSchema>;

@@ -30,7 +30,11 @@ model Room {
   gungu        String // 예: "마포구" — 지역 드롭다운 2단계
   category     String // "합주실" | "음악연습실"
   pricePerHour Int? // 시간당 요금(원). 패키지 요금만 있는 곳은 null
-  imageUrl     String?
+  imageUrl     String? // 크롤링한 곳의 대표 이미지 주소
+  // 사용자가 올린 사진(최대 5장). 파일 저장소가 없어 data URL로 담는다.
+  // 브라우저에서 800px·JPEG로 줄여 보내므로 한 장에 100KB 남짓이다.
+  images       String[]
+  homepageUrl  String? // 홈페이지 또는 예약 링크
   phone        String?
   rating       Float?
   reviewCount  Int?

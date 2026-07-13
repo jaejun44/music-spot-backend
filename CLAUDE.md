@@ -144,6 +144,8 @@ npx prisma studio        # DB GUI
 - 크롤링 시드: `ownerId = null`, `sourceUrl` 있음 → **아무도 삭제할 수 없다.**
 - 직접 등록: `ownerId` 있음, `sourceUrl = null` → 등록자 본인만 삭제한다.
 - 등록 시 지역은 사용자에게 묻지 않고 주소에서 뽑는다(`parseAddressRegion`). ETL 스크립트와 **같은 함수**를 쓴다 — 표기가 갈리면 같은 필터에 걸리지 않는다.
+- 등록 사진은 **최대 5장**, 파일 저장소가 없어 `images String[]`에 data URL로 담는다. 브라우저가 800px·JPEG로 줄여 보낸다(`shared/ui/image-resizer.js`). 줄이지 않은 원본이 들어오면 DB가 부푸므로 서버가 장수와 크기를 둘 다 막는다.
+- 사진이 본문에 실리므로 `express.json` 상한이 5MB다. 이 값을 100KB로 되돌리면 등록이 통째로 깨진다.
 
 ## 배포 (Render) 시 주의
 

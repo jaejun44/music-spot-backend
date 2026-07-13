@@ -14,6 +14,8 @@ const 연습실 = (id: number, name: string): Room => ({
   category: "합주실",
   pricePerHour: 7000,
   imageUrl: "https://example.com/room.jpg",
+  images: [],
+  homepageUrl: null,
   phone: "010-1234-5678",
   rating: 4.5,
   reviewCount: 10,
@@ -269,6 +271,8 @@ describe("연습실 등록(registerRoom)", () => {
     pricePerHour: 15000,
     phone: "010-1234-5678",
     hours: "10~24시",
+    homepageUrl: "https://example.com",
+    images: ["data:image/jpeg;base64,AAAA"],
     ownerId: 7,
   };
 

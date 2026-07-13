@@ -91,7 +91,9 @@ model Room {
   gungu        String   // "마포구" — 지역 드롭다운 2단계
   category     String   // "합주실" | "음악연습실"
   pricePerHour Int?     // 시간당 요금. 패키지 요금만 있는 곳은 null
-  imageUrl     String?
+  imageUrl     String?  // 크롤링한 곳의 대표 이미지 주소
+  images       String[] // 사용자가 올린 사진(최대 5장). 저장소가 없어 data URL로 담는다
+  homepageUrl  String?  // 홈페이지 또는 예약 링크
   phone        String?
   rating       Float?
   reviewCount  Int?
@@ -304,11 +306,17 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
   "category": "합주실",
   "pricePerHour": 15000,
   "phone": "010-1234-5678",
-  "hours": "10~24시"
+  "hours": "10~24시",
+  "homepageUrl": "https://booking.example.com/our-room",
+  "images": ["data:image/jpeg;base64,..."]
 }
 ```
 
-`name`·`address`·`category`는 필수, 나머지는 비워도 됩니다(null).
+`name`·`address`·`category`는 필수, 나머지는 비워도 됩니다(null / 빈 배열).
+
+**사진(`images`)은 최대 5장**이고, 파일 저장소가 없어 `data:image/...;base64,` 형태로 받아 DB에 담습니다.
+브라우저가 800px·JPEG로 줄여 보내므로 한 장이 100KB 남짓입니다. 한 장이 약 500KB를 넘으면 거절합니다.
+(그래서 `express.json` 상한을 5MB로 올려두었습니다. 기본값 100KB로는 사진 한 장도 못 받습니다.)
 
 **응답 `201 Created`** — `{ "room": { ... "ownerId": 4, "sourceUrl": null } }`
 

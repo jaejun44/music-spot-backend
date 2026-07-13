@@ -25,7 +25,9 @@ app.use(
     origin: env.corsOrigins.length > 0 ? env.corsOrigins : true,
   }),
 );
-app.use(express.json());
+// 연습실 등록 시 사진(최대 5장)이 data URL로 본문에 실린다.
+// 기본 상한 100KB로는 사진 한 장도 못 받는다. 5장이 들어갈 만큼만 올린다.
+app.use(express.json({ limit: "5mb" }));
 app.use(morgan(env.isProduction ? "combined" : "dev"));
 
 // 무료 플랜 서버를 지키기 위한 최소한의 방어선.

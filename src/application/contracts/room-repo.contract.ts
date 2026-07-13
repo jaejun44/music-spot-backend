@@ -27,6 +27,8 @@ export type NewRoom = {
   pricePerHour: number | null;
   phone: string | null;
   hours: string | null;
+  homepageUrl: string | null;
+  images: string[]; // 최대 5장. 파일 저장소가 없어 data URL로 담는다.
   ownerId: number;
 };
 
