@@ -1,0 +1,45 @@
+# Render Blueprint
+# Render 대시보드 → New → Blueprint → 이 저장소를 선택하면
+# 아래 정의대로 PostgreSQL과 웹 서비스가 한 번에 만들어진다.
+
+databases:
+  - name: music-spot-db
+    databaseName: music_spot
+    user: music_spot
+    plan: free
+
+services:
+  - type: web
+    name: music-spot-backend
+    runtime: node
+    plan: free
+    region: singapore
+    branch: main
+
+    # --include=dev가 없으면 안 된다.
+    # Render는 NODE_ENV=production을 주입하고, npm은 그때 devDependencies를 건너뛴다.
+    # 그러면 빌드에 필요한 tsc, prisma, tsx가 설치되지 않아 배포가 깨진다.
+    buildCommand: npm install --include=dev && npm run build && npx prisma migrate deploy && npm run seed
+
+    startCommand: npm start
+
+    # Render가 이 경로로 상태를 확인한다. 랜딩 페이지의 웜업 요청도 여기로 온다.
+    healthCheckPath: /health
+
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: music-spot-db
+          property: connectionString
+
+      # Render가 안전한 랜덤 값을 생성해 넣는다. 사람이 만들 필요가 없다.
+      - key: JWT_SECRET
+        generateValue: true
+
+      - key: NODE_ENV
+        value: production
+
+      # 배포된 Vercel 랜딩 페이지 주소. 대시보드에서 직접 입력한다.
+      # 값이 틀리면 브라우저가 CORS로 요청을 막는다.
+      - key: CORS_ORIGIN
+        sync: false
