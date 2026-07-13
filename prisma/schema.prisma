@@ -1,0 +1,30 @@
+// Music Spot 백엔드 Prisma 스키마
+// 참고: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// 서비스 이용자
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  username  String
+  createdAt DateTime @default(now())
+}
+
+// 연습실 (랜딩의 "지금 HOT한 연습실" 카드)
+model Room {
+  id           Int      @id @default(autoincrement())
+  name         String
+  location     String // 예: "서울 노량진동"
+  category     String // 예: "합주룸"
+  pricePerHour Int // 시간당 요금(원)
+  createdAt    DateTime @default(now())
+}

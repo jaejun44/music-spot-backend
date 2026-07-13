@@ -1,0 +1,536 @@
+{
+  "info": {
+    "name": "Music Spot API",
+    "description": "스프린트 미션 7 — Music Spot 백엔드 API.\n\n## 쓰는 법\n1. 우측 상단에서 환경을 고른다 (Local 또는 Render).\n2. 폴더 전체를 Run 하면 위에서 아래로 순서대로 실행되며 상태코드가 자동 검증된다.\n3. `2. 회원가입`이 매번 새 이메일을 만들고, `3. 로그인`이 토큰을 환경변수 `token`에 자동 저장한다. 이후 보호된 요청은 그 토큰을 자동으로 쓴다.\n\n각 요청에는 Tests 스크립트가 붙어 있어 통과/실패가 바로 보인다.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. 헬스체크",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200으로 응답한다', () => pm.response.to.have.status(200));",
+              "pm.test('status가 ok다', () => {",
+              "  pm.expect(pm.response.json().status).to.eql('ok');",
+              "});",
+              "// Render 무료 플랜은 잠들어 있으면 첫 응답까지 최대 1분이 걸린다.",
+              "pm.test('응답 시간을 기록한다', () => {",
+              "  console.log('응답 시간(ms):', pm.response.responseTime);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        },
+        "description": "서버가 살아있는지 확인한다. Render 슬립 해제(웜업)에도 쓴다."
+      },
+      "response": []
+    },
+    {
+      "name": "1. 연습실 목록 조회",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200으로 응답한다', () => pm.response.to.have.status(200));",
+              "pm.test('rooms 배열을 돌려준다', () => {",
+              "  pm.expect(pm.response.json().rooms).to.be.an('array');",
+              "});",
+              "pm.test('연습실이 시드되어 있다', () => {",
+              "  pm.expect(pm.response.json().rooms.length).to.be.above(0);",
+              "});",
+              "pm.test('각 연습실이 필요한 필드를 갖고 있다', () => {",
+              "  const room = pm.response.json().rooms[0];",
+              "  pm.expect(room).to.have.property('id');",
+              "  pm.expect(room).to.have.property('name');",
+              "  pm.expect(room).to.have.property('location');",
+              "  pm.expect(room).to.have.property('category');",
+              "  pm.expect(room).to.have.property('pricePerHour');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/rooms",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "rooms"]
+        },
+        "description": "랜딩 페이지의 연습실 카드를 채우는 공개 API. 인증이 필요 없다."
+      },
+      "response": []
+    },
+    {
+      "name": "2. 연습실 상세 조회",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200으로 응답한다', () => pm.response.to.have.status(200));",
+              "pm.test('id가 1인 연습실을 돌려준다', () => {",
+              "  pm.expect(pm.response.json().room.id).to.eql(1);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/rooms/1",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "rooms", "1"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. 연습실 상세 — 없는 ID (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('404로 응답한다', () => pm.response.to.have.status(404));",
+              "pm.test('사람이 읽을 수 있는 메시지를 준다', () => {",
+              "  pm.expect(pm.response.json().message).to.eql('존재하지 않는 연습실입니다.');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/rooms/99999",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "rooms", "99999"]
+        },
+        "description": "없는 리소스는 404로 응답해야 한다."
+      },
+      "response": []
+    },
+    {
+      "name": "4. 연습실 상세 — 숫자 아닌 ID (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400으로 응답한다', () => pm.response.to.have.status(400));",
+              "pm.test('무엇이 잘못됐는지 알려준다', () => {",
+              "  pm.expect(pm.response.json().message).to.include('숫자');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/rooms/abc",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "rooms", "abc"]
+        },
+        "description": "잘못된 입력은 zod가 걸러 400으로 응답한다."
+      },
+      "response": []
+    },
+    {
+      "name": "5. 회원가입 (201)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 매 실행마다 새 이메일을 만들어 중복 가입 에러를 피한다.",
+              "const email = `tester_${Date.now()}@musicspot.com`;",
+              "pm.environment.set('testEmail', email);",
+              "pm.environment.set('testPassword', '1234');",
+              "pm.environment.set('testUsername', '테스터');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201로 응답한다', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('토큰을 발급한다', () => {",
+              "  pm.expect(body.token).to.be.a('string').and.not.empty;",
+              "});",
+              "pm.test('가입한 유저 정보를 돌려준다', () => {",
+              "  pm.expect(body.user.email).to.eql(pm.environment.get('testEmail').toLowerCase());",
+              "});",
+              "pm.test('⚠️ 비밀번호 해시가 응답에 새어나오지 않는다', () => {",
+              "  pm.expect(body.user).to.not.have.property('password');",
+              "  pm.expect(pm.response.text()).to.not.include('$2b$');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\",\n  \"username\": \"{{testUsername}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/signup",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "signup"]
+        },
+        "description": "가입 즉시 토큰을 발급한다. 실행할 때마다 새 이메일이 생성된다."
+      },
+      "response": []
+    },
+    {
+      "name": "6. 회원가입 — 이메일 중복 (409)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('409로 응답한다', () => pm.response.to.have.status(409));",
+              "pm.test('이미 가입된 이메일임을 알려준다', () => {",
+              "  pm.expect(pm.response.json().message).to.eql('이미 가입된 이메일입니다.');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\",\n  \"username\": \"{{testUsername}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/signup",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "signup"]
+        },
+        "description": "바로 앞에서 가입한 이메일로 한 번 더 시도한다. 409가 나와야 한다."
+      },
+      "response": []
+    },
+    {
+      "name": "7. 회원가입 — 입력값 검증 실패 (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400으로 응답한다', () => pm.response.to.have.status(400));",
+              "pm.test('세 필드의 문제를 모두 알려준다', () => {",
+              "  const message = pm.response.json().message;",
+              "  pm.expect(message).to.include('이메일');",
+              "  pm.expect(message).to.include('비밀번호');",
+              "  pm.expect(message).to.include('활동명');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"이메일아님\",\n  \"password\": \"1\",\n  \"username\": \"\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/signup",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "signup"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "8. 로그인 (200) — 토큰 자동 저장",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200으로 응답한다', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('토큰을 발급한다', () => {",
+              "  pm.expect(body.token).to.be.a('string').and.not.empty;",
+              "});",
+              "// 이후 보호된 요청이 쓸 수 있도록 환경변수에 저장한다.",
+              "pm.environment.set('token', body.token);",
+              "console.log('토큰을 환경변수에 저장했습니다.');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/signin",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "signin"]
+        },
+        "description": "성공하면 토큰을 환경변수 `token`에 자동 저장한다. 이후 요청은 이 값을 쓴다."
+      },
+      "response": []
+    },
+    {
+      "name": "9. 로그인 — 비밀번호 틀림 (401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('401로 응답한다', () => pm.response.to.have.status(401));",
+              "pm.test('가입 여부를 유추할 수 없는 메시지를 준다', () => {",
+              "  pm.expect(pm.response.json().message).to.eql('이메일 또는 비밀번호가 일치하지 않습니다.');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"9999\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/signin",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "signin"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "10. 로그인 — 없는 계정 (401, 같은 메시지)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('401로 응답한다', () => pm.response.to.have.status(401));",
+              "pm.test('비밀번호 틀림과 똑같은 메시지다 (가입 여부 노출 방지)', () => {",
+              "  pm.expect(pm.response.json().message).to.eql('이메일 또는 비밀번호가 일치하지 않습니다.');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"nobody-here@musicspot.com\",\n  \"password\": \"1234\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/signin",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "signin"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "11. 내 정보 조회 — 토큰 있음 (200)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200으로 응답한다', () => pm.response.to.have.status(200));",
+              "const me = pm.response.json().me;",
+              "pm.test('내 정보를 돌려준다', () => {",
+              "  pm.expect(me.email).to.eql(pm.environment.get('testEmail').toLowerCase());",
+              "});",
+              "pm.test('⚠️ 비밀번호 해시가 응답에 새어나오지 않는다', () => {",
+              "  pm.expect(me).to.not.have.property('password');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "users", "me"]
+        },
+        "description": "JWT로 보호된 엔드포인트. 8번 로그인이 저장한 토큰을 쓴다."
+      },
+      "response": []
+    },
+    {
+      "name": "12. 내 정보 조회 — 토큰 없음 (401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('401로 응답한다', () => pm.response.to.have.status(401));",
+              "pm.test('로그인이 필요하다고 알려준다', () => {",
+              "  pm.expect(pm.response.json().message).to.eql('로그인이 필요합니다.');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "users", "me"]
+        },
+        "description": "보호된 API가 실제로 잠겨 있는지 확인한다."
+      },
+      "response": []
+    },
+    {
+      "name": "13. 내 정보 조회 — 위조 토큰 (401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('401로 응답한다', () => pm.response.to.have.status(401));",
+              "pm.test('유효하지 않은 토큰이라고 알려준다', () => {",
+              "  pm.expect(pm.response.json().message).to.eql('유효하지 않은 토큰입니다.');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjk5OTl9.forged-signature"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "users", "me"]
+        },
+        "description": "서명이 맞지 않는 토큰을 거부하는지 확인한다."
+      },
+      "response": []
+    },
+    {
+      "name": "14. 로그아웃 (200)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200으로 응답한다', () => pm.response.to.have.status(200));",
+              "// JWT는 서버에 상태가 없다. 실제 폐기는 클라이언트가 토큰을 버리는 것으로 이뤄진다."
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/signout",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "signout"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "15. 없는 엔드포인트 (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('404로 응답한다', () => pm.response.to.have.status(404));",
+              "pm.test('없는 API임을 알려준다', () => {",
+              "  pm.expect(pm.response.json().message).to.include('존재하지 않는 API');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/이런거없음",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "이런거없음"]
+        }
+      },
+      "response": []
+    }
+  ]
+}

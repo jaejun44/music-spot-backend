@@ -1,0 +1,34 @@
+# macOS
+.DS_Store
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.production.local
+!.env.example
+
+# Coverage
+coverage/
+
+# Editor
+.vscode/*
+!.vscode/settings.json
+.idea/
+
+# Prisma generated client (빌드 시 prisma generate로 재생성)
+/src/generated/prisma
