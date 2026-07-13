@@ -7,16 +7,16 @@ databases:
     databaseName: music_spot
     user: music_spot
     plan: free
-    # 웹 서비스와 반드시 같은 리전이어야 한다.
+    # 웹 서비스와 반드시 같은 리전이어야 한다. 한국에서 가장 가까운 Render 리전은 싱가포르다.
     # Render의 Internal Database URL은 리전을 넘어가면 연결되지 않는다.
-    region: oregon
+    region: singapore
 
 services:
   - type: web
     name: music-spot-backend
     runtime: node
     plan: free
-    region: oregon # music-spot-db와 같은 리전 (내부 DB 연결 조건)
+    region: singapore # music-spot-db와 같은 리전 (내부 DB 연결 조건)
     branch: main
 
     # --include=dev가 없으면 안 된다.
