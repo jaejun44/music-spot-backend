@@ -4,7 +4,7 @@
 스프린트 미션 6에서 만든 프론트엔드의 Mock 데이터를 걷어내고, 실제 PostgreSQL에 데이터를 저장하는 서버를 붙였습니다.
 
 - **배포된 랜딩 페이지**: https://music-spot-landing.vercel.app
-- **배포된 API**: https://music-spot-backend-s509.onrender.com
+- **배포된 API**: https://music-spot-backend-2wcj.onrender.com
 - **프론트엔드 저장소**: [music-spot-landing](https://github.com/jaejun44/music-spot-landing)
 
 ## 기술 스택
@@ -97,7 +97,7 @@ model Room {
 
 # API 문서
 
-Base URL — 로컬 `http://localhost:3000` / 배포 `https://music-spot-backend-s509.onrender.com`
+Base URL — 로컬 `http://localhost:3000` / 배포 `https://music-spot-backend-2wcj.onrender.com`
 
 모든 요청·응답은 `application/json`입니다.
 
