@@ -1,11 +1,40 @@
 # Music Spot — 백엔드
 
-밴드 연습실 매칭 서비스 [Music Spot](https://www.musicspotfest.com/) 랜딩 페이지의 백엔드 API 서버입니다.
-스프린트 미션 6에서 만든 프론트엔드의 Mock 데이터를 걷어내고, 실제 PostgreSQL에 데이터를 저장하는 서버를 붙였습니다.
+전국 **음악연습실·합주실 576곳**을 지역으로 찾고, 뮤지션끼리 이야기 나누고, 사장님이 직접 연습실을 등록하는 서비스의 API 서버입니다.
+연습실 데이터는 크롤링한 것을 정제해 시드했고, 회원가입·검색·커뮤니티·등록이 모두 실제로 동작합니다.
 
-- **배포된 랜딩 페이지**: https://music-spot-landing.vercel.app
-- **배포된 API**: https://music-spot-backend-2wcj.onrender.com
-- **프론트엔드 저장소**: [music-spot-landing](https://github.com/jaejun44/music-spot-landing)
+## 🔗 데모
+
+|                   | 주소                                                                 |
+| ----------------- | -------------------------------------------------------------------- |
+| **웹사이트**      | **https://music-spot-landing.vercel.app**                            |
+| API               | https://music-spot-backend-2wcj.onrender.com                         |
+| 서버 상태·현황    | https://music-spot-backend-2wcj.onrender.com/health                  |
+| 프론트엔드 저장소 | [music-spot-landing](https://github.com/jaejun44/music-spot-landing) |
+
+> API 서버는 Render 무료 플랜이라 15분간 요청이 없으면 잠듭니다.
+> 첫 접속은 깨어나는 데 최대 1분이 걸릴 수 있습니다(랜딩이 자동으로 깨웁니다).
+
+## 📸 화면
+
+**연습실 검색** — 시/도 → 시·군·구 2단 드롭다운, 합주실/음악연습실, 이름·동네 키워드로 찾습니다. 필터링은 전부 서버(DB)가 합니다.
+
+![연습실 검색 화면](docs/screenshots/02-search.png)
+
+**연습실 등록** — 로그인하면 사장님이 직접 등록합니다. 사진은 최대 5장, 홈페이지·예약 링크를 함께 받습니다. 지역은 따로 묻지 않고 주소에서 뽑아냅니다.
+
+![연습실 등록 폼](docs/screenshots/03-register.png)
+
+**커뮤니티** — 목록·상세는 누구나 보고, 글쓰기는 로그인해야 합니다. 삭제는 작성자 본인만 가능합니다.
+
+![커뮤니티 화면](docs/screenshots/04-community.png)
+
+<details>
+<summary>첫 화면</summary>
+
+![히어로 화면](docs/screenshots/01-hero.png)
+
+</details>
 
 ## 기술 스택
 
