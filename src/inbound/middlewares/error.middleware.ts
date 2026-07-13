@@ -13,7 +13,9 @@ export const notFoundMiddleware = (
   next: NextFunction,
 ) => {
   next(
-    new NotFoundException(`존재하지 않는 API입니다. (${req.method} ${req.path})`),
+    new NotFoundException(
+      `존재하지 않는 API입니다. (${req.method} ${req.path})`,
+    ),
   );
 };
 
@@ -35,7 +37,11 @@ export const errorMiddleware = (
 
   // 여기까지 온 것은 우리가 예상하지 못한 에러다. 반드시 로그로 남긴다.
   if (err instanceof TechnicalException) {
-    console.error(`[TechnicalException:${err.code}]`, err.message, err.originalErr);
+    console.error(
+      `[TechnicalException:${err.code}]`,
+      err.message,
+      err.originalErr,
+    );
   } else {
     console.error("[UnknownError]", err);
   }

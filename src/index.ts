@@ -10,7 +10,7 @@ import {
   notFoundMiddleware,
 } from "./inbound/middlewares/error.middleware.js";
 
-const { authRouter, userRouter, roomRouter } = bootstrap();
+const { authRouter, userRouter, roomRouter, postRouter } = bootstrap();
 
 const app = express();
 
@@ -34,7 +34,9 @@ const apiLimiter = rateLimit({
   limit: 200,
   standardHeaders: "draft-7",
   legacyHeaders: false,
-  message: { message: "너무 많은 요청이 발생했습니다. 잠시 뒤에 다시 시도해주세요." },
+  message: {
+    message: "너무 많은 요청이 발생했습니다. 잠시 뒤에 다시 시도해주세요.",
+  },
 });
 
 // 로그인·회원가입은 비밀번호 대입 공격의 표적이므로 더 좁게 잠근다.
@@ -43,7 +45,9 @@ const authLimiter = rateLimit({
   limit: 30,
   standardHeaders: "draft-7",
   legacyHeaders: false,
-  message: { message: "로그인 시도가 너무 많습니다. 잠시 뒤에 다시 시도해주세요." },
+  message: {
+    message: "로그인 시도가 너무 많습니다. 잠시 뒤에 다시 시도해주세요.",
+  },
 });
 
 // 헬스체크는 Render의 슬립 해제(웜업)에도 쓰이므로 rate limit 앞에 둔다.
@@ -55,6 +59,7 @@ app.use("/api", apiLimiter);
 app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/users", userRouter);
 app.use("/api/rooms", roomRouter);
+app.use("/api/posts", postRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);

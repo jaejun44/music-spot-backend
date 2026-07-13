@@ -66,9 +66,9 @@ export type RoomServiceType = ReturnType<typeof createRoomService>;
 
 ### 2. 에러는 두 종류뿐이다
 
-| | 용도 | 응답 |
-|---|---|---|
-| `BusinessException` | 사용자가 이해하고 고칠 수 있는 문제 | `statusCode` + `message` 그대로 노출 |
+|                      | 용도                                           | 응답                                         |
+| -------------------- | ---------------------------------------------- | -------------------------------------------- |
+| `BusinessException`  | 사용자가 이해하고 고칠 수 있는 문제            | `statusCode` + `message` 그대로 노출         |
 | `TechnicalException` | 시스템 내부 사정 (DB 제약 위반, JWT 서명 오류) | 500 + 뭉뚱그린 메시지, 서버 로그에 원본 기록 |
 
 `BusinessException` 하위 클래스로 상태코드를 표현한다. 새 상태코드가 필요하면 클래스를 추가한다.
@@ -116,6 +116,7 @@ npm test         # jest — 전체 테스트
 ```
 
 테스트가 깨지면:
+
 - **새로 쓴 테스트**가 깨졌다 → 직접 고친다.
 - **기존 테스트**가 깨졌다 → **작업을 중단하고** 원인을 분석해 간단히 알린다. 기존 테스트를 지우거나 완화해서 통과시키지 않는다.
 
@@ -123,10 +124,20 @@ npm test         # jest — 전체 테스트
 
 ```bash
 npm run dev              # tsx watch — 개발 서버
-npm run seed             # 연습실 4곳 시드 (여러 번 실행해도 안전)
+npm run seed             # prisma/data/rooms.json → DB (sourceUrl 기준 upsert. 여러 번 실행해도 안전)
+npx tsx scripts/build-rooms.ts <csv경로>   # 크롤링 CSV → prisma/data/rooms.json 재생성
 npx prisma migrate dev   # 스키마 변경 → 마이그레이션 생성
 npx prisma studio        # DB GUI
 ```
+
+## 연습실 데이터
+
+연습실 576곳은 **크롤링 데이터를 정제해 시드**한다. 손으로 넣지 않는다.
+
+- 원본 CSV는 저장소 밖(`~/Desktop/Music-Spot/musicspot_app/data`)에 있고 배포 서버에는 없다.
+- `scripts/build-rooms.ts`가 정제해 `prisma/data/rooms.json`을 만들고, **이 JSON만 커밋**한다. seed는 JSON만 읽는다.
+- 정제 규칙: spacecloud 출처만(mule은 월세 매물 광고라 제외) · 악기/보컬 카테고리만(댄스 전용 스튜디오 제외) · 이름+주소·URL 중복 제거 · 주소에서 `sido`/`gungu` 파싱(실패한 행은 버린다).
+- 카테고리는 `합주실` / `음악연습실` 두 가지로 줄여 검색 필터로 쓴다.
 
 ## 배포 (Render) 시 주의
 
@@ -138,4 +149,20 @@ npx prisma studio        # DB GUI
 ## 프론트엔드 (`music-spot-landing`)
 
 FSD(Feature-Sliced Design) 구조를 쓰는 **별도 저장소**다. 백엔드 구조와 섞지 않는다.
-응답 형태(`{ token, user }`, `{ rooms }`, `{ me }`, `{ message }`)를 바꾸면 프론트가 깨진다. 바꿀 때는 양쪽을 같이 고친다.
+
+화면에 살아 있는 기능은 **회원가입 · 주변 연습실 검색 · 커뮤니티** 셋뿐이다. 메뉴에 다른 항목을 늘리지 않는다.
+
+응답 형태를 바꾸면 프론트가 깨진다. 바꿀 때는 양쪽을 같이 고친다.
+
+| 엔드포인트                                             | 응답                                                         |
+| ------------------------------------------------------ | ------------------------------------------------------------ |
+| `POST /api/auth/signup`·`signin`                       | `{ token, user }`                                            |
+| `GET /api/users/me`                                    | `{ me }`                                                     |
+| `GET /api/rooms?sido&gungu&category&keyword&page&size` | `{ rooms, total, page, size, totalPages, hasNext }`          |
+| `GET /api/rooms/regions`                               | `{ regions: [{ sido, count, gungus: [{ gungu, count }] }] }` |
+| `GET /api/rooms/:id`                                   | `{ room }`                                                   |
+| `GET /api/posts?page&size`                             | `{ posts, total, page, size, totalPages, hasNext }`          |
+| `POST /api/posts` (인증) · `GET /api/posts/:id`        | `{ post }`                                                   |
+| 에러                                                   | `{ message }`                                                |
+
+게시글의 작성자는 **`toPublicPost()`를 거쳐** `{ id, username }`만 나간다. `include: { author: true }` 결과를 그대로 `res.json()` 하면 비밀번호 해시가 샌다.

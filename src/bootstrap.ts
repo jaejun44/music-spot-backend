@@ -1,12 +1,15 @@
 import { createAuthService } from "./application/services/auth.service.js";
 import { createUserService } from "./application/services/user.service.js";
 import { createRoomService } from "./application/services/room.service.js";
+import { createPostService } from "./application/services/post.service.js";
 import { createAuthController } from "./inbound/controllers/auth.controller.js";
 import { createUserController } from "./inbound/controllers/user.controller.js";
 import { createRoomController } from "./inbound/controllers/room.controller.js";
+import { createPostController } from "./inbound/controllers/post.controller.js";
 import { createAuthMiddleware } from "./inbound/middlewares/auth.middleware.js";
 import { createUserRepo } from "./outbound/repos/user.repo.js";
 import { createRoomRepo } from "./outbound/repos/room.repo.js";
+import { createPostRepo } from "./outbound/repos/post.repo.js";
 import { bcryptUtil } from "./shared/utils/bcrypt.util.js";
 import { signJwt, verifyJwt } from "./shared/utils/jwt.util.js";
 
@@ -20,7 +23,14 @@ import { signJwt, verifyJwt } from "./shared/utils/jwt.util.js";
 export const bootstrap = () => {
   // outbound
   const { findUserByEmail, findUserById, createUser } = createUserRepo();
-  const { findAll, findById } = createRoomRepo();
+  const { search, findById, countByRegion } = createRoomRepo();
+  // 연습실 repo와 이름이 겹쳐(findById) 게시글 쪽은 이름을 바꿔 받는다.
+  const {
+    findMany: findPosts,
+    findById: findPostById,
+    create: createPost,
+    deleteById: deletePostById,
+  } = createPostRepo();
 
   // application
   const { signIn, signUp } = createAuthService(
@@ -30,13 +40,34 @@ export const bootstrap = () => {
     bcryptUtil,
   );
   const { getMe } = createUserService(findUserById);
-  const { getRooms, getRoom } = createRoomService(findAll, findById);
+  const { searchRooms, getRoom, getRegions } = createRoomService(
+    search,
+    findById,
+    countByRegion,
+  );
+  const { getPosts, getPost, writePost, deletePost } = createPostService(
+    findPosts,
+    findPostById,
+    createPost,
+    deletePostById,
+  );
 
   // inbound
   const authMiddleware = createAuthMiddleware(verifyJwt);
   const { router: authRouter } = createAuthController(signIn, signUp);
   const { router: userRouter } = createUserController(getMe, authMiddleware);
-  const { router: roomRouter } = createRoomController(getRooms, getRoom);
+  const { router: roomRouter } = createRoomController(
+    searchRooms,
+    getRoom,
+    getRegions,
+  );
+  const { router: postRouter } = createPostController(
+    getPosts,
+    getPost,
+    writePost,
+    deletePost,
+    authMiddleware,
+  );
 
-  return { authRouter, userRouter, roomRouter };
+  return { authRouter, userRouter, roomRouter, postRouter };
 };

@@ -1,56 +1,46 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { prismaClient } from "../src/outbound/repos/prismaClient.js";
 
 /**
- * 랜딩 페이지에 하드코딩되어 있던 연습실 4곳을 DB로 옮긴다.
- * 고정 id로 upsert하므로 여러 번 실행해도 중복이 쌓이지 않는다.
+ * 크롤링·정제한 연습실(prisma/data/rooms.json)을 DB에 넣는다.
+ * JSON은 scripts/build-rooms.ts가 만든다. 원본 CSV는 저장소 밖에 있어 배포 서버에서는 이 JSON만 쓴다.
+ *
+ * 원본 URL(sourceUrl)을 기준으로 upsert하므로 여러 번 실행해도 중복이 쌓이지 않는다.
  */
-const rooms = [
-  {
-    id: 1,
-    name: "숨 음악연습실",
-    location: "서울 노량진동",
-    category: "합주룸",
-    pricePerHour: 7000,
-  },
-  {
-    id: 2,
-    name: "스튜디오에스에이",
-    location: "서울 신사동",
-    category: "합주룸",
-    pricePerHour: 10000,
-  },
-  {
-    id: 3,
-    name: "르씨엘 아트홀 분당점",
-    location: "성남 정자동",
-    category: "합주룸",
-    pricePerHour: 8000,
-  },
-  {
-    id: 4,
-    name: "위저스트뮤직 역삼점",
-    location: "서울 역삼동",
-    category: "합주룸",
-    pricePerHour: 5000,
-  },
-];
+type SeedRoom = {
+  name: string;
+  address: string;
+  sido: string;
+  gungu: string;
+  category: string;
+  pricePerHour: number | null;
+  imageUrl: string | null;
+  phone: string | null;
+  rating: number | null;
+  reviewCount: number | null;
+  hours: string | null;
+  sourceUrl: string;
+};
+
+const DATA_PATH = resolve(import.meta.dirname, "data/rooms.json");
 
 const main = async () => {
-  for (const room of rooms) {
-    await prismaClient.room.upsert({
-      where: { id: room.id },
-      update: room,
-      create: room,
-    });
-  }
+  const rooms: SeedRoom[] = JSON.parse(readFileSync(DATA_PATH, "utf-8"));
 
-  // 고정 id로 insert했으므로 autoincrement 시퀀스를 마지막 id 뒤로 밀어준다.
-  // 이걸 빼먹으면 이후 첫 자동 생성이 id=1로 시도되어 중복 키 에러가 난다.
-  await prismaClient.$executeRawUnsafe(
-    `SELECT setval(pg_get_serial_sequence('"Room"', 'id'), (SELECT COALESCE(MAX(id), 1) FROM "Room"))`,
+  // 576곳을 한 건씩 왕복시키면 원격 DB에서 수 분이 걸린다. 트랜잭션으로 한 번에 밀어 넣는다.
+  await prismaClient.$transaction(
+    rooms.map((room) =>
+      prismaClient.room.upsert({
+        where: { sourceUrl: room.sourceUrl },
+        update: room,
+        create: room,
+      }),
+    ),
   );
 
-  console.log(`연습실 ${rooms.length}곳을 seed했습니다.`);
+  const total = await prismaClient.room.count();
+  console.log(`연습실 ${rooms.length}곳을 seed했습니다. (DB 총 ${total}곳)`);
 };
 
 main()

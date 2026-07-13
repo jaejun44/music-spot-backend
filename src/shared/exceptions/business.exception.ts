@@ -27,6 +27,13 @@ export class UnauthorizedException extends BusinessException {
   }
 }
 
+/** 로그인은 했지만 그 리소스를 다룰 권한이 없다 (남의 글 삭제 등) */
+export class ForbiddenException extends BusinessException {
+  constructor(message: string) {
+    super(message, 403);
+  }
+}
+
 /** 존재하지 않는 리소스 */
 export class NotFoundException extends BusinessException {
   constructor(message: string) {

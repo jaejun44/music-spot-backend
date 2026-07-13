@@ -88,7 +88,10 @@ describe("로그인(signIn)", () => {
   });
 
   test("응답에 비밀번호 해시를 절대 포함하지 않는다", async () => {
-    const deps = 가짜의존성만들기({ findUserByEmail: 저장된유저, compare: true });
+    const deps = 가짜의존성만들기({
+      findUserByEmail: 저장된유저,
+      compare: true,
+    });
     const { signIn } = 서비스만들기(deps);
 
     const result = await signIn({ email: "asd@asd.com", password: "1234" });
@@ -98,7 +101,10 @@ describe("로그인(signIn)", () => {
   });
 
   test("대문자·공백이 섞인 이메일도 정규화해서 조회한다", async () => {
-    const deps = 가짜의존성만들기({ findUserByEmail: 저장된유저, compare: true });
+    const deps = 가짜의존성만들기({
+      findUserByEmail: 저장된유저,
+      compare: true,
+    });
     const { signIn } = 서비스만들기(deps);
 
     await signIn({ email: "  ASD@ASD.COM  ", password: "1234" });
@@ -183,7 +189,10 @@ describe("로그인(signIn)", () => {
   });
 
   test("JWT 서명이 실패하면 에러를 전파한다", async () => {
-    const deps = 가짜의존성만들기({ findUserByEmail: 저장된유저, compare: true });
+    const deps = 가짜의존성만들기({
+      findUserByEmail: 저장된유저,
+      compare: true,
+    });
     deps.signJwt.mockImplementation(() => {
       throw new Error("JWT 서명 실패");
     });
@@ -201,9 +210,9 @@ describe("로그인(signIn)", () => {
     });
     const { signIn } = 서비스만들기(deps);
 
-    await expect(signIn({ email: "asd@asd.com", password: "" })).rejects.toThrow(
-      "이메일 또는 비밀번호가 일치하지 않습니다.",
-    );
+    await expect(
+      signIn({ email: "asd@asd.com", password: "" }),
+    ).rejects.toThrow("이메일 또는 비밀번호가 일치하지 않습니다.");
     expect(deps.hashUtil.compare).toHaveBeenCalledWith({
       password: "",
       hashedPassword: "hashed_password",
@@ -271,7 +280,10 @@ describe("회원가입(signUp)", () => {
   });
 
   test("이메일을 정규화해서 중복 검사하고 정규화된 값으로 저장한다", async () => {
-    const deps = 가짜의존성만들기({ findUserByEmail: null, createUser: 새유저 });
+    const deps = 가짜의존성만들기({
+      findUserByEmail: null,
+      createUser: 새유저,
+    });
     const { signUp } = 서비스만들기(deps);
 
     await signUp({
@@ -361,7 +373,10 @@ describe("회원가입(signUp)", () => {
   });
 
   test("저장은 됐지만 JWT 서명이 실패하면 에러를 전파한다", async () => {
-    const deps = 가짜의존성만들기({ findUserByEmail: null, createUser: 새유저 });
+    const deps = 가짜의존성만들기({
+      findUserByEmail: null,
+      createUser: 새유저,
+    });
     deps.signJwt.mockImplementation(() => {
       throw new Error("JWT 서명 실패");
     });

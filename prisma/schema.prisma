@@ -17,14 +17,39 @@ model User {
   password  String
   username  String
   createdAt DateTime @default(now())
+  posts     Post[]
 }
 
-// 연습실 (랜딩의 "지금 HOT한 연습실" 카드)
+// 연습실 (스페이스클라우드 크롤링 데이터를 정제해 시드)
 model Room {
   id           Int      @id @default(autoincrement())
   name         String
-  location     String // 예: "서울 노량진동"
-  category     String // 예: "합주룸"
-  pricePerHour Int // 시간당 요금(원)
+  address      String
+  sido         String // 예: "서울" — 지역 드롭다운 1단계
+  gungu        String // 예: "마포구" — 지역 드롭다운 2단계
+  category     String // "합주실" | "음악연습실"
+  pricePerHour Int? // 시간당 요금(원). 패키지 요금만 있는 곳은 null
+  imageUrl     String?
+  phone        String?
+  rating       Float?
+  reviewCount  Int?
+  hours        String? // 예: "0~24시"
+  sourceUrl    String   @unique // 원본 상세 페이지. 재시드 시 중복을 막는 기준 키
   createdAt    DateTime @default(now())
+
+  // 지역 필터가 항상 함께 걸리므로 복합 인덱스로 묶는다.
+  @@index([sido, gungu])
+}
+
+// 커뮤니티 게시글
+model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  authorId  Int
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  // 목록은 항상 최신순이라 정렬 컬럼에 인덱스를 둔다.
+  @@index([createdAt])
 }
